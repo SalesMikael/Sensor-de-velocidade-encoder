@@ -1,0 +1,28 @@
+const int sensorPin = D5; // Pino de entrada do sensor infravermelho (ajuste conforme necessário)
+volatile int counter = 0; // Contador de pulsos (deve ser volátil porque é usado em uma interrupção)
+unsigned long timePrevious = 0; // Armazena o tempo anterior para cálculo de intervalo
+
+// Função de interrupção chamada quando um pulso é detectado
+void ICACHE_RAM_ATTR countPulses() {
+  counter++; // Incrementa o contador de pulsos
+}
+
+void setup() {
+  Serial.begin(9600); // Inicia a comunicação serial a 9600 bps
+  pinMode(sensorPin, INPUT); // Configura o pino do sensor como entrada
+  // Configura a interrupção para o pino do sensor, chamando countPulses na borda de subida
+  attachInterrupt(digitalPinToInterrupt(sensorPin), countPulses, RISING);
+}
+
+void loop() {
+  unsigned long timeNow = millis(); // Obtém o tempo atual em milissegundos
+  if (timeNow - timePrevious >= 1000) { // Verifica se passou 1 segundo
+    // Calcula a velocidade em RPM: (pulsos / 20.0) * 60.0
+    // 20.0 é o número de pulsos por rotação completa (ajuste conforme necessário)
+    float speed = (counter / 20.0) * 60.0; 
+    Serial.printf("Speed: %.2f RPM\n", speed); // Envia a velocidade calculada para o monitor serial
+    counter = 0; // Reinicia o contador de pulsos
+    timePrevious = timeNow; // Atualiza o tempo anterior para o tempo atual
+  }
+}
+
